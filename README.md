@@ -35,6 +35,7 @@ There are also some less-nifty options:
     -q will generate your waveform without printing out a bunch of stuff.
     -h will print out a help screen with all this info.
     -F will automatically overwrite destination file.
+    -o will output your waveform data to the console.
 
 Usage in code
 =============
