@@ -21,8 +21,14 @@ optparse = OptionParser.new do |o|
   end
 
   options[:force] = false
-  o.on("-F", "--force", "Force generationg of waveform if file exists") do
+  o.on("-F", "--force", "Force generation of waveform if file exists") do
     options[:force] = true
+  end
+
+  options[:output] = false
+  o.on("-o", "--output", "Output waveform data") do
+    options[:logger] = nil
+    options[:output] = true
   end
 
   o.on("-h", "--help", "Display this screen") do
@@ -34,26 +40,35 @@ end
 optparse.parse!
 
 begin
-  output = ARGV[1] || "waveform.json"
+  samples = Waveformjson.generate(ARGV[0], options)
 
-  if File.exists?(output) && !options[:force]
-    raise RuntimeError.new("Destination file #{output} exists. Use --force if you want to automatically remove it.")
+  json = "["
+
+  samples.each_with_index do |d, index|
+    json << d.to_s
+    json << ", " unless index == samples.size - 1
   end
 
-  json = Waveformjson.generate(ARGV[0], options)
-  File.open(output, 'w') do |f|
-    f << '['
+  json << "]"
 
-    json.each_with_index do |d, index|
-      f << d
-      f << ', ' unless index == json.size - 1
+  if options[:output]
+    print json
+  else
+    filename = ARGV[1] || "waveform.json"
+
+    if File.exists?(filename) && !options[:force]
+      raise RuntimeError.new("Destination file #{filename} exists. Use --force if you want to automatically remove it.")
     end
 
-    f << ']'
+    File.open(filename, "w") do |f|
+      f << json
+    end
   end
 rescue ArgumentError => e
   puts e.message + "\n\n"
   puts optparse
+  exit 1
 rescue RuntimeError => e
   puts e.message
+  exit 1
 end
